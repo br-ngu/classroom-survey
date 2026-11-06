@@ -1,21 +1,42 @@
-# AI development history
+# Classroom Survey Web App — AI Development History
 
-This is a factual Markdown summary, not a fabricated Cursor transcript. The work occurred in ChatGPT Work mode using an AI coding agent.
+**Environment:** ChatGPT Work mode with an AI coding agent.  
+**Format:** Markdown summary of actual interactions, not an exported Cursor transcript.  
+**Repository:** https://github.com/br-ngu/classroom-survey  
+**Application:** https://classroom-survey-6q4.pages.dev/
 
-1. **User request:** “Do this assignment for me.” The user supplied the assignment and five specification documents.
-2. **Requirements review:** The agent read the assignment and source specifications, identified the required React/Supabase architecture and noted that the provided TODO claimed completed work without attached source code.
-3. **Scope clarification through progress updates:** The agent explained that it would generate the application and deliverables, while live service setup, public deployment and database screenshots would require external accounts. It did not claim those steps had happened.
-4. **Implementation:** The agent created the Vite/React/TypeScript project, all specified routes, instructor and anonymous student views, chart/CSV helpers, QR presentation and the SQL migration. It chose an explicit instructor allowlist, immutable non-draft surveys, transactional saves and browser-token duplicate protection.
-5. **Security review:** The agent restricted direct table writes, revoked default public execution privileges on mutation functions, added RLS and validated question/choice relationships inside the submission RPC. Survey locks handle submission/closing ordering.
-6. **Build/debug:** The first build found a TypeScript union-type mismatch in the Supabase response helper. The agent corrected the helper and obtained a passing frontend production build.
-7. **Automated verification:** The agent wrote nine data-helper checks and nineteen embedded PostgreSQL checks. The database checks exercised the actual migration with modeled Supabase auth/roles, including anonymous denial, instructor access, invalid answer rejection, transaction rollback and duplicate prevention.
-8. **Preview limitation:** A Vite server was started. The cloud browser failed to reach its localhost address; this is documented rather than treating browser QA as passed.
-9. **Documentation and handoff:** The agent generated setup/deployment instructions, a revised TODO, this history, a development-summary draft and a checklist for real database evidence and final submission.
+## 1. Requirements and implementation
 
-## Follow-up record for the student
+I uploaded the assignment and the five specification files and asked the agent to complete the assignment. The agent reviewed the required frontend, database, authentication, QR, results, and deployment features. It generated a React/TypeScript/Vite application, Supabase integration, SQL migration, automated tests, and documentation. It also noted that the supplied TODO already contained completion marks without accompanying source code, so it created a separate implementation checklist.
 
-After live setup, append your actual prompts, observed errors, fixes, test results, deployment URLs and dates here. Do not describe this summary as an exported Cursor conversation or claim live verification until performed.
+The generated design included an instructor allowlist, immutable non-draft surveys, transactional draft saves and submissions, anonymous browser-token duplicate protection, and a database constraint allowing only one active survey.
 
-## Connected-account setup
+## 2. Initial verification
 
-The user connected Supabase and GitHub, selected the listed Supabase organization, and authorized creation of the classroom-survey database. The agent created the project, inspected its empty schema, applied the migration, reviewed advisors, and verified table/function permissions on the live database. The user independently created and confirmed an instructor account and a private GitHub repository. The agent added that specific account to the instructor allowlist and prepared the source upload. Passwords were not shared with the agent. Production frontend hosting and live end-to-end browser verification remain pending.
+The first production build exposed a TypeScript mismatch involving Supabase authentication response types. The agent corrected the response helper. Nine data-helper checks and nineteen embedded PostgreSQL checks passed. The latter exercised the actual migration with modeled Supabase authentication roles; they were not presented as real Supabase login tests. An attempted local browser preview could not be reached by the remote browser.
+
+## 3. Connected services and database setup
+
+I asked whether the agent could perform setup on my behalf, then connected GitHub and Supabase. The agent inspected the accessible accounts. I authorized creation of the classroom-survey Supabase project in my organization. The agent created the project, inspected the empty schema, applied the migration, reviewed advisors, and verified live database permissions.
+
+I created and confirmed an instructor account privately in Supabase and created the GitHub repository. I supplied the repository URL. The agent allowlisted the specific instructor account and uploaded the source, excluding `.env`, dependencies, and build output. The initial GitHub Actions build/test workflow succeeded. No password was shared in the conversation.
+
+## 4. Deployment guidance
+
+I configured Cloudflare and shared screenshots when uncertain about its interface. The first setup was a Worker deployment. The agent guided me to create a Pages deployment connected to the GitHub repository, using `npm run build`, output directory `dist`, and the public Supabase build variables. I supplied the resulting production URL.
+
+## 5. Production configuration bug
+
+The agent's browser observed that the deployed login page reported missing Supabase configuration. I replied that it worked for me and supplied a homepage screenshot. The agent rechecked the login page, where the warning remained. I then supplied a screenshot showing that I had entered the build variables correctly.
+
+That evidence led the agent to inspect its code rather than continue assuming configuration entry was the problem. It found an alias-based `import.meta` access that prevented Vite's environment substitution, changed it to direct `import.meta.env` access, rebuilt, checked the generated assets for the public project settings, and pushed a corrective commit. I subsequently confirmed that the application worked.
+
+## 6. Manual evidence and final documents
+
+I supplied screenshots of the dashboard, database schema, results, editor, and stored choices. They show a closed Recursion Concept Check, a duplicated draft, both question types, and one recorded response with displayed counts and percentages. The agent explained that schema and UI screenshots should be supplemented by actual survey/question and response/answer database records.
+
+A live query later confirmed that the closed survey had two questions, one response, and two answers, while its duplicated draft had two questions and zero responses. I asked what to submit and requested written deliverables. The agent prepared the development summary, this history, and a submission guide based on the observed work.
+
+## Verification boundaries
+
+This record distinguishes generated implementation, automated checks, user-reported success, screenshots, and direct database verification. It does not claim that all manual checks, real-device QR scanning, spreadsheet compatibility, 200 simultaneous students, or the page-load target have been verified. The development report's suggested personal reflection should be reviewed and rewritten to match my own understanding before submission.

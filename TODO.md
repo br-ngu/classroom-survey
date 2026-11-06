@@ -32,8 +32,8 @@ This replaces the supplied checklist's unsupported completion claims. Original p
 - [ ] Test full keyboard flow, mobile layout, screen-reader basics and two browsers.
 - [ ] Open CSV in spreadsheet software.
 - [ ] Test 200 simultaneous students and page load target.
-- [ ] Push to user's GitHub repository.
-- [ ] Deploy Cloudflare Pages with production variables and routing.
+- [x] Push to user's GitHub repository.
+- [x] Deploy Cloudflare Pages with production variables and routing.
 - [ ] Retest login, students and results in production.
 - [ ] Capture genuine Supabase and app results screenshots.
 - [ ] Add final URLs, private grader access, and personalize report learning section.

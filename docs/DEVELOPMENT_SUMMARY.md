@@ -1,37 +1,37 @@
-# Development summary — Classroom Survey
+# Classroom Survey Web App — Development Summary
 
-**Draft for review and personalization.** This describes actual implementation work. External setup, deployment and evidence collection remain pending; replace the marked sections only after performing them. Do not submit this as a claim of actions you have not taken.
+**Course:** CSE 4095 — Agentic Programming  
+**Repository:** https://github.com/br-ngu/classroom-survey  
+**Deployed application:** https://classroom-survey-6q4.pages.dev/
 
-## Using the specifications
+## How the specifications guided development
 
-The AI agent reviewed the overall specification, UI routes, data model, API and task roadmap supplied with the assignment. These documents defined two separate experiences: a protected instructor workspace and a public student survey. The React application follows those routes and limits questions to multiple choice and true/false. The database uses the five specified tables and preserves historical results. The supplied TODO contained prechecked tasks despite no source code being attached, so a new checklist distinguishes implemented features from unverified live-service work.
+I provided ChatGPT's coding agent with the assignment and the five supplied specification documents. The overall specification established the application's scope; DATABASE.md defined the relationships; API.md described data access; UI.md guided the screens and routes; and TODO.md provided the implementation roadmap. The resulting application separates the instructor workspace from the anonymous student experience and supports multiple-choice and true/false questions.
 
-## Generated application and architecture
+The agent generated the React and TypeScript frontend, Vite configuration, responsive styles, Supabase integration, database migration, automated checks, and initial documentation. I connected my GitHub and Supabase accounts, created the instructor login and repository, configured Cloudflare Pages, and supplied screenshots and feedback during testing. The agent performed database setup and source uploads through the authorized integrations. This was AI-assisted implementation, rather than code I wrote entirely by hand.
 
-The agent generated the React/TypeScript frontend, Vite configuration, Tailwind and custom responsive styles, Supabase access helpers, PostgreSQL migration, tests and documentation. The instructor workspace supports draft editing, reordering questions and choices, duplication, search, filtering, activation, closing, archiving and confirmed deletion. A presentation page generates a QR code from the current site's origin. The student view has no account requirement and submits all answers together. Results show bar charts and numeric tables; CSV exports include one row per response plus survey metadata.
+## Database setup and security
 
-The frontend is responsible for display and immediate form feedback. Supabase Auth handles instructor credentials and sessions. The PostgreSQL backend is responsible for authoritative access checks, survey state, submission validation and persistence. Frontend protections improve usability but do not replace database security.
+The backend uses Supabase's hosted PostgreSQL database. After I authorized the project, the agent created it and applied the SQL migration. The five required tables are `surveys`, `questions`, `choices`, `responses`, and `answers`. UUID primary keys identify records, and foreign keys connect questions to surveys, choices to questions, responses to surveys, and answers to responses and selected choices.
 
-## Database configuration
+An additional `instructors` table controls instructor authorization. I created and confirmed my authentication account, and the agent added it to that allowlist. Row Level Security is enabled on all six tables. Anonymous students can read active survey content, but cannot read stored responses or answers or directly modify survey content. Instructor operations check allowlist membership. The frontend uses a public publishable key; no instructor password or service-role key was committed to GitHub.
 
-The generated migration creates surveys, questions, choices, responses and answers with UUID keys and foreign keys. Cascading deletion removes a deleted survey's related records; archiving preserves them. A partial unique index prevents more than one active survey. A response uniqueness constraint pairs the survey ID with an anonymous browser token to prevent accidental repeated submissions.
+## Frontend and backend communication
 
-RLS limits anonymous reads to active survey content and denies access to responses and answers. An additional instructor allowlist prevents an arbitrary authenticated account from acquiring instructor permissions. All browser writes go through restricted SQL functions. Draft saves and student submissions execute in transactions, preventing partial records when validation fails.
+The React frontend uses the Supabase JavaScript client. Supabase Auth handles instructor login and sessions. Read queries retrieve survey content and instructor-only results. Database RPC functions handle draft saves, activation, closing, archiving/deletion, and student submissions.
 
-**Live setup pending:** Create a Supabase project, run the migration, create an instructor account, insert its Auth UUID into the allowlist and configure the two public Vite environment variables. No secret or service-role key belongs in the frontend.
+A submission sends the survey ID, an anonymous browser token, and question/choice IDs. The database checks that the survey is active, every question is answered exactly once, and each choice belongs to its question. The response and answers are inserted in one transaction. A unique constraint on survey ID and browser token provides accidental duplicate protection. A partial unique index enforces one active survey. Results show counts, percentages, charts, and CSV export; the presentation page generates a QR code using the deployed site's URL.
 
-## Frontend-to-database communication
+## Debugging and verification
 
-The Supabase JavaScript client uses password authentication for instructors. It retrieves surveys and nested questions/choices through PostgREST queries protected by RLS. The `save_survey`, `activate_survey`, `close_survey` and `manage_survey` RPCs implement instructor mutations. Students call `submit_survey_response` with a browser token and question/choice IDs. This RPC checks that the survey is active, all questions are answered exactly once and each choice belongs to its question. It then inserts the response and answers atomically. Instructor result queries retrieve responses and answers; the browser calculates counts and percentages and refreshes every five seconds.
+One significant problem appeared after deployment. Although I had entered the Supabase environment variables in Cloudflare, the login page still reported that Supabase was not configured. I shared a screenshot showing the variables. The agent identified that its code accessed `import.meta` through an alias, preventing Vite from substituting the environment settings during the production build. It changed the code to use `import.meta.env` directly, verified that the built assets contained the expected public configuration, and pushed the fix. After redeployment, I confirmed that the application worked.
 
-## Problems and testing
+Automated verification included nine data-helper checks and nineteen embedded PostgreSQL checks covering validation, CSV handling, result calculations, permissions, transactions, lifecycle rules, and duplicate rejection. The initial GitHub Actions build/test workflow completed successfully. Live permission queries also confirmed that anonymous users cannot read responses or answers or activate surveys.
 
-A concurrency issue was identified during implementation: checking status only in the frontend could allow submission after closing. The submission function therefore holds a shared survey-row lock, while closing updates the same row. Concurrent submissions can coexist, but close and submission are ordered at the database boundary. Administrative transitions also share an advisory lock. Live multi-connection testing remains necessary.
+My screenshots show a closed “Recursion Concept Check,” its results, its multiple-choice and true/false questions, and a duplicated draft. A later live database query verified two questions, one response, and two answers for the closed survey. The duplicated draft contained two questions and no responses. I also inspected the schema and saved choice records in Supabase. These observations demonstrate stored application data; they do not establish 200-user concurrency, load-time targets, or completion of every manual test.
 
-The initial TypeScript build exposed a generic helper mismatch with Supabase's authentication response union. The helper was changed to preserve the input response's data type, and the production build passed. Local automated checks cover CSV quoting/formula protection, result calculations, validation and ordering. Nineteen embedded PostgreSQL checks passed against the migration with modeled Supabase authentication, covering permissions, transactional rollback, lifecycle rules, invalid submissions and duplicate protection. These checks do not substitute for a live Supabase integration test. Browser QA was attempted but the remote browser could not reach the local preview.
+## Deployment and learning reflection
 
-## Deployment and learning
+The source is stored in my GitHub repository, and I deployed the frontend with Cloudflare Pages using `npm run build` and the `dist` output directory. Supabase hosts authentication and persistent database storage separately. Cloudflare's build configuration supplies the public Supabase URL and key. Instructor test credentials will be shared privately with the grader, and the private repository requires grader access.
 
-**Deployment pending:** Publish the source to a personal GitHub repository and connect it to Cloudflare Pages with Vite build settings and public Supabase variables. Verify production routes, instructor login, QR scanning, persistent student submissions and results. Capture real database and results screenshots. Record the final URLs in the submission checklist and supply test credentials privately.
-
-**Student reflection to complete:** Explain in your own words what you learned about foreign keys, RLS versus frontend route protection, transactions and hosting a static frontend separately from its database. Describe the live setup/testing you personally performed and one issue you encountered. This report intentionally does not invent a student's experiences or completed deployment.
+**Suggested personal reflection — review and revise before submitting:** This project helped me understand how a frontend, authentication service, and relational database work together. Foreign keys maintain relationships, while RLS and database functions enforce permissions beyond what the interface displays. Transactions prevent partially saved submissions. The deployment bug also showed why a successful build does not prove that production configuration is correct. AI accelerated implementation, but reviewing behavior, supplying evidence, and testing the deployed application remained necessary.
