@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { createClient } from "@supabase/supabase-js";
 export type Choice = { id: string; choice_text: string; position: number };
 export type Question = {
@@ -21,13 +22,13 @@ export type ResponseRow = {
   submitted_at: string;
   answers: { question_id: string; choice_id: string }[];
 };
-const env = import.meta as unknown as { env: Record<string, string> };
+const env = import.meta.env;
 export const configured = Boolean(
-  env.env?.VITE_SUPABASE_URL && env.env?.VITE_SUPABASE_ANON_KEY,
+  env?.VITE_SUPABASE_URL && env?.VITE_SUPABASE_ANON_KEY,
 );
 export const db = createClient(
-  env.env?.VITE_SUPABASE_URL || "https://unconfigured.supabase.co",
-  env.env?.VITE_SUPABASE_ANON_KEY || "unconfigured",
+  env?.VITE_SUPABASE_URL || "https://unconfigured.supabase.co",
+  env?.VITE_SUPABASE_ANON_KEY || "unconfigured",
   configured
     ? {}
     : {
